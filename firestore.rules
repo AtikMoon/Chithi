@@ -43,10 +43,13 @@ service cloud.firestore {
         request.resource.data.isAnonymous is bool &&
         request.resource.data.deleteToken is string;
 
-      // Only the recipient can read their messages
-      allow read: if
+      // The recipient can list/read their own inbox. Senders can only
+      // open the exact token document used by the unsend page.
+      allow get: if
         (request.auth != null && resource.data.toUserId == request.auth.uid) ||
         resource.data.deleteToken == messageId;
+      allow list: if
+        request.auth != null && resource.data.toUserId == request.auth.uid;
 
       // Only the recipient can delete from the dashboard
       allow delete: if
