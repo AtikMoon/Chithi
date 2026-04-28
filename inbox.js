@@ -12,7 +12,6 @@ import {
   collection,
   query,
   where,
-  orderBy,
   onSnapshot,
   deleteDoc,
   doc,
@@ -80,8 +79,7 @@ onAuthStateChanged(auth, async (user) => {
 function loadMessages(uid) {
   const q = query(
     collection(db, "messages"),
-    where("toUserId", "==", uid),
-    orderBy("createdAt", "desc")
+    where("toUserId", "==", uid)
   );
 
   // onSnapshot = real-time updates whenever messages change
@@ -101,9 +99,15 @@ function loadMessages(uid) {
     const count = snapshot.size;
     inboxCountEl.textContent = `${count} ${count === 1 ? "message" : "messages"}`;
 
+    const docs = snapshot.docs.slice().sort((a, b) => {
+      const aTime = a.data().createdAt?.toMillis?.() || 0;
+      const bTime = b.data().createdAt?.toMillis?.() || 0;
+      return bTime - aTime;
+    });
+
     // Render all messages
     messagesListEl.innerHTML = "";
-    snapshot.forEach(docSnap => {
+    docs.forEach(docSnap => {
       messagesListEl.appendChild(buildMessageCard(docSnap));
     });
   }, (err) => {
